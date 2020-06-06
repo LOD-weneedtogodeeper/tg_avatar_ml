@@ -63,7 +63,7 @@ class Converter:
 
     def add_audio(self):
 
-        command = f"ffmpeg -i {self.video_from_gif_path} -i {self.audio_path} -shortest final.mp4"
+        command = f"ffmpeg -i {self.video_from_gif_path} -i {self.audio_path} -shortest {self.result}"
         subprocess.call(command, shell=True)
 
     def convert(self):

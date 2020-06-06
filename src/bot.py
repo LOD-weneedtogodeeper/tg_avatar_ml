@@ -18,6 +18,7 @@ import logging
 import json
 import base64
 from api import Api
+from convert import Converter
 import configparser
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
@@ -104,19 +105,19 @@ def video_upload(update, context):
     res = api.set_data('/inference')
 
     bot = update.message.bot
+    c = Converter(base64.b64encode(video_file.download_as_bytearray()),
+                  res['video'],result=f"{chat_id}_final.mp4")
+    c.convert()
+
     with open(f"{chat_id}_final.gif", "wb") as fh:
         fh.write(base64.b64decode(res['video']))
-    # with open('data.txt', 'w') as outfile:
-    #     json.dump(res, outfile)
-    # bot.send_video(chat_id,res['video'])
-    bot.send_video(chat_id, video=open(f'{chat_id}_final.gif', 'rb'))
+
+    bot.send_video(chat_id, video=open(f'{chat_id}_final.mp4', 'rb'))
 
     logger.info("Got video from %s: %s", user.first_name, f'{chat_id}_video.mp4')
-    api.set_data('/set')
-    update.message.reply_text('Perfect! Now, wait, we\'re processing your request.')
-    #
-    #   Send result
-    #
+    
+    update.message.reply_text('Perfect! Now, wait, we are processing your request.')
+
     update.message.reply_text('Hope you enjoyed the result.\n\nTo start over message /start.',
                               reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
