@@ -73,7 +73,7 @@ def photo_upload(update, context):
     user = update.message.from_user
     chat_id = update.message.chat.id
     photo_file = update.message.photo[-1].get_file()
-    api.set_photo(photo_file.download_as_bytearray())
+    api.set_photo(photo_file.download_as_bytearray(), chat_id)
 
     # api.set_data("/set", json=json.dumps({'img': f'{bytearr}'}))
 
@@ -106,11 +106,11 @@ def video_upload(update, context):
     # api.set_video(video_file.download_as_bytearray())
     logger.info(f"chat_id:{chat_id} │ Got video from {user.first_name} {chat_id}_video.jpg")
     # api.set_data('/set')
-    api.set_video(video_file.download_as_bytearray())
+    api.set_video(video_file.download_as_bytearray(), chat_id)
 
     logger.info("Video of %s: %s", user.first_name, f'{chat_id}_video.mp4')
     update.message.reply_text('Perfect! Now, wait, we are processing your request. Please wait, processing can last longer than 30 seconds')
-    res = api.set_data('/inference')
+    res = api.set_data('/inference', chat_id)
 
     bot = update.message.bot
     c = Converter(base64.b64encode(video_file.download_as_bytearray()),
