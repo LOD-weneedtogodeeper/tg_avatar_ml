@@ -53,17 +53,17 @@ class Converter:
 
     def get_audio(self):
 
-        command = f"ffmpeg -i {self.video_path} -ab 160k -ac 2 -ar 44100 -vn  {self.audio_path}"
+        command = f"ffmpeg -y -i {self.video_path} -ab 160k -ac 2 -ar 44100 -vn  {self.audio_path}"
         subprocess.call(command, shell=True)
 
     def convert_gif(self):
 
-        command = f'ffmpeg -i {self.gif_path} -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {self.video_from_gif_path}'
+        command = f'ffmpeg -y -i {self.gif_path} -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {self.video_from_gif_path}'
         subprocess.call(command, shell=True)
 
     def add_audio(self):
 
-        command = f"ffmpeg -i {self.video_from_gif_path} -i {self.audio_path} -shortest final.mp4"
+        command = f"ffmpeg -y -i {self.video_from_gif_path} -i {self.audio_path} -shortest {self.result}"
         subprocess.call(command, shell=True)
 
     def convert(self):
