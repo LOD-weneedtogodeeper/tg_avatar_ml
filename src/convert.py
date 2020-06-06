@@ -52,8 +52,6 @@ class Converter:
             gif_file.write(decoded_gif)
 
     def get_audio(self):
-        print(self.video_path)
-        print(self.audio_path)
 
         command = f"ffmpeg -i {self.video_path} -ab 160k -ac 2 -ar 44100 -vn  {self.audio_path}"
         subprocess.call(command, shell=True)
@@ -78,4 +76,3 @@ class Converter:
         for filename in os.listdir("tmp"):
             os.remove(os.path.join("tmp", filename))
 
-        print("Converted")
