@@ -19,7 +19,7 @@ import json
 import base64
 from api import Api
 import configparser
-from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
+from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
                           ConversationHandler)
 
@@ -37,9 +37,11 @@ def start(update, context):
     reply_keyboard = [['Upload Photo', 'Exit']]
 
     update.message.reply_text(
-        'Hi! My name is Professor Bot. I will hold a conversation with you. '
+        'Hi! I\'ll help you to create a hilarious video. '
+        'You just need to follow my commands and you\'ll get a video at the end ' 
         'Send /cancel to stop talking to me.\n\n'
-        'Upload photo to start',
+        'To get started you\'ll need a portrait photo that you want to animate and a video.\n\n'
+        'Press "Upload Photo" to continue...',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
     return CHOOSING
@@ -48,7 +50,6 @@ def start(update, context):
 def choice(update, context):
     user = update.message.from_user
     logger.info("Choice of %s: %s", user.first_name, update.message.text)
-
     update.message.reply_text('I see! Please send me a photo of yourself, '
                               'so I know what you look like, or send /skip if you don\'t want to.',
                               reply_markup=ReplyKeyboardRemove())
@@ -57,8 +58,10 @@ def choice(update, context):
 
 def photo(update, context):
     user = update.message.from_user
-    logger.info("Sent info to  %s: %s", user.first_name, f'{user.first_name}_{user.last_name}')
-    update.message.reply_text('Description what we\'ll do with the photo\n Send me some photo now')
+    logger.info(f"Sent photo info to {user.first_name}")
+    context.bot.sendPhoto(chat_id=update.message.chat.id, photo=open('example_photo.jpg', 'rb'),
+                          caption="That's an example of a good photo to process.\n\n"
+                                  "Now you should send me a photo to work with.")
     return PHOTO_UPLOAD
 
 
@@ -66,34 +69,37 @@ def photo_upload(update, context):
     user = update.message.from_user
     chat_id = update.message.chat.id
     photo_file = update.message.photo[-1].get_file()
-    # api.photo = photo_file.download_as_bytearray()
     api.set_photo(photo_file.download_as_bytearray())
     # photo_file.download(f'{chat_id}_photo.jpg')
     # api.set_data("/set", json=json.dumps({'img': f'{bytearr}'}))
-    logger.info("Photo of %s: %s", user.first_name, f'{chat_id}_photo.jpg')
+    logger.info("Got photo from %s: %s", user.first_name, f'{chat_id}_photo.jpg')
     reply_keyboard = [['Upload Video', 'Exit']]
-    update.message.reply_text('Gorgeous! Now, wait, we\'re processing your photo and you have to upload a video',
+    update.message.reply_text('Gorgeous! '
+                              'Now send me a video of you talking or pretending that you\'re the person on the picture.'
+                              'I need to see your face clearly.'
+                              'The better you upload the video, the better the result will be.\n\n'
+                              'Press "Upload Video" to continue...',
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    # That's how we can send photo to a user
-    # context.bot.sendPhoto(chat_id=chat_id, photo=open('phil.jpg', 'rb'), caption="This is the test photo caption")
     return CHOOSING
 
 
 def video(update, context):
-    # user = update.message.from_user
-    # logger.info("Sent info to  %s: %s", user.first_name, f'{user.first_name}_{user.last_name}')
-    update.message.reply_text('Description what we\'ll do with the video\n Send me some video now')
+    user = update.message.from_user
+    logger.info(f"Sent video info to {user.first_name}")
+    update.message.reply_text('I hope you\'ve prepared a video based on my previous message because you\'ll need it now'
+                              '.\n\n Now you should send me a video to work with')
     return VIDEO_UPLOAD
 
 
 def video_upload(update, context):
     user = update.message.from_user
     chat_id = update.message.chat.id
-    logger.info("Video upload successful %s", user.first_name)
     video_file = update.message.video.get_file()
     video_file.download(f'{chat_id}_video.mp4')
+    logger.info("Video upload successful %s", user.first_name)
     # api.video = video_file.download_as_bytearray()
     api.set_video(video_file.download_as_bytearray())
+
     logger.info("Video of %s: %s", user.first_name, f'{chat_id}_video.mp4')
     res = api.set_data('/inference')
 
@@ -104,8 +110,14 @@ def video_upload(update, context):
     #     json.dump(res, outfile)
     # bot.send_video(chat_id,res['video'])
     bot.send_video(chat_id, video=open(f'{chat_id}_final.gif', 'rb'))
-    update.message.reply_text('Gorgeous! Now, wait, we\'re processing your video')
-    update.message.reply_text('Bye! I hope we can talk again some day.',
+
+    logger.info("Got video from %s: %s", user.first_name, f'{chat_id}_video.mp4')
+    api.set_data('/set')
+    update.message.reply_text('Perfect! Now, wait, we\'re processing your request.')
+    #
+    #   Send result
+    #
+    update.message.reply_text('Hope you enjoyed the result.\n\nTo start over message /start.',
                               reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
@@ -117,25 +129,6 @@ def skip_photo(update, context):
                               'or send /skip.')
 
     return LOCATION
-
-
-def location(update, context):
-    user = update.message.from_user
-    user_location = update.message.location
-    logger.info("Location of %s: %f / %f", user.first_name, user_location.latitude,
-                user_location.longitude)
-    update.message.reply_text('Maybe I can visit you sometime! '
-                              'At last, tell me something about yourself.')
-
-    return CANCEL
-
-
-def bio(update, context):
-    user = update.message.from_user
-    logger.info("Bio of %s: %s", user.first_name, update.message.text)
-    update.message.reply_text('Thank you! I hope we can talk again some day.')
-
-    return ConversationHandler.END
 
 
 def cancel(update, context):
@@ -150,10 +143,6 @@ def cancel(update, context):
 def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
-
-
-def regular_choice():
-    pass
 
 
 def main():
