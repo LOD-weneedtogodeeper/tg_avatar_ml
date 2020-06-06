@@ -122,16 +122,11 @@ def video_upload(update, context):
 
     logger.info("Got video from %s: %s", user.first_name, f'{chat_id}_video.mp4')
 
-    update.message.reply_text('Hope you enjoyed the result.\n\nTo start over message /start.',
 
-    
-    #
-    #   Send result
-    #
     logger.info(f"chat_id:{chat_id} │ Send final result {user.first_name}")
     update.message.reply_text('Hope you enjoyed the result.\n\nTo start over message me with /start.',
                               reply_markup=ReplyKeyboardRemove())
-    logger.info(f"chat_id:{update.message.chat.id} │ User {user.first.name} ended the conversation")
+    logger.info(f"chat_id:{update.message.chat.id} │ User {user.first_name} ended the conversation")
     return ConversationHandler.END
 
 
@@ -145,7 +140,7 @@ def skip_photo(update, context):
 
 def cancel(update, context):
     user = update.message.from_user
-    logger.info(f"chat_id:{update.message.chat.id} │ User {user.first.name} ended the conversation")
+    logger.info(f"chat_id:{update.message.chat.id} │ User {user.first_name} ended the conversation")
     update.message.reply_text('Bye! I hope we can talk again some day.\n\n'
                               'Message me with /start if you changed your mind',
                               reply_markup=ReplyKeyboardRemove())
