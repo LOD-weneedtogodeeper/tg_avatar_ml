@@ -16,6 +16,7 @@ bot.
 import os
 import logging
 import json
+import base64
 from api import Api
 import configparser
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
@@ -94,7 +95,15 @@ def video_upload(update, context):
     # api.video = video_file.download_as_bytearray()
     api.set_video(video_file.download_as_bytearray())
     logger.info("Video of %s: %s", user.first_name, f'{chat_id}_video.mp4')
-    api.set_data('/set')
+    res = api.set_data('/inference')
+
+    bot = update.message.bot
+    with open(f"{chat_id}_final.gif", "wb") as fh:
+        fh.write(base64.b64decode(res['video']))
+    # with open('data.txt', 'w') as outfile:
+    #     json.dump(res, outfile)
+    # bot.send_video(chat_id,res['video'])
+    bot.send_video(chat_id, video=open(f'{chat_id}_final.gif', 'rb'))
     update.message.reply_text('Gorgeous! Now, wait, we\'re processing your video')
     update.message.reply_text('Bye! I hope we can talk again some day.',
                               reply_markup=ReplyKeyboardRemove())
