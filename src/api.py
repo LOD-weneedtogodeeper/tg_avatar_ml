@@ -11,27 +11,28 @@ logger = logging.getLogger(__name__)
 
 class Api:
     def __init__(self):
-        self.end_point = "URL"
+        self.end_point = "http://0.0.0.0:9999"
         self.photo = None
         self.video = None
 
     def set_photo(self, photo):
-        self.photo = str(base64.b64encode(photo))
+        self.photo = str(base64.b64encode(photo).decode('utf-8'))
 
     def set_video(self, video):
-        self.video = str(base64.b64encode(video))
+        self.video = str(base64.b64encode(video).decode('utf-8'))
 
-    def _request(self, method, path, data=None):
-        logger.info(f"{method} {self.end_point + path, data}")
-        # resp = requests.request(method, self.end_point + path, json=json)
-        # logger.info(f"{path}-{resp.status_code}")
-        # if resp.status_code == 200:
-        #     data = resp.json()
-        #     return data
-        return None
+    def _request(self, path, data=None):
+        logger.info(f"POST {self.end_point + path}")
+        resp = requests.post(self.end_point + path, data=data)
+        logger.info(f"{path}-{resp.status_code}")
+        
+        return resp.json()
+
+    def to_telegram_gif(self, result):
+        gif = result['video']
 
     def set_data(self, path, data=None):
         data = json.dumps({'img': self.photo,
                            'video': self.video})
-        result = self._request(method="GET", path=path, data=data)
-        print(result)
+        result = self._request(path=path, data=data)
+        return result
