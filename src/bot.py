@@ -16,6 +16,7 @@ bot.
 import os
 import logging
 import json
+import base64
 from api import Api
 import configparser
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup)
@@ -97,10 +98,26 @@ def video_upload(update, context):
     chat_id = update.message.chat.id
     video_file = update.message.video.get_file()
     video_file.download(f'{chat_id}_video.mp4')
+    logger.info("Video upload successful %s", user.first_name)
     # api.video = video_file.download_as_bytearray()
     # api.set_video(video_file.download_as_bytearray())
     logger.info(f"chat_id:{chat_id} │ Got video from {user.first_name} {chat_id}_video.jpg")
     # api.set_data('/set')
+    api.set_video(video_file.download_as_bytearray())
+
+    logger.info("Video of %s: %s", user.first_name, f'{chat_id}_video.mp4')
+    res = api.set_data('/inference')
+
+    bot = update.message.bot
+    with open(f"{chat_id}_final.gif", "wb") as fh:
+        fh.write(base64.b64decode(res['video']))
+    # with open('data.txt', 'w') as outfile:
+    #     json.dump(res, outfile)
+    # bot.send_video(chat_id,res['video'])
+    bot.send_video(chat_id, video=open(f'{chat_id}_final.gif', 'rb'))
+
+    logger.info("Got video from %s: %s", user.first_name, f'{chat_id}_video.mp4')
+    api.set_data('/set')
     update.message.reply_text('Perfect! Now, wait, we\'re processing your request.')
     #
     #   Send result
