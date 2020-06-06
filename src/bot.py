@@ -43,6 +43,8 @@ def start(update, context):
         'You just need to follow my commands and you\'ll get a video at the end ' 
         'Send /cancel to stop talking to me.\n\n'
         'To get started you\'ll need a portrait photo that you want to animate and a video.\n\n'
+        'Please align photo and video your uploading as best as you can\n\n'
+        'Position of head on video should match position on photo\n\n'
         'Press "Upload Photo" to continue...',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
