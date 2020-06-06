@@ -13,7 +13,7 @@ Send /start to initiate the conversation.
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-
+import os
 import logging
 import json
 from api import Api
@@ -26,8 +26,6 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-config = configparser.ConfigParser()
-config.read('config/token.ini')
 
 CHOOSING, PHOTO, PHOTO_UPLOAD, VIDEO, VIDEO_UPLOAD, LOCATION, CANCEL = range(7)
 
@@ -154,7 +152,8 @@ def main():
     # Create the Updater and pass it your bot's token.
     # Make sure to set use_context=True to use the new context based callbacks
     # Post version 12 this will no longer be necessary
-    updater = Updater(config['Token']['secret'], use_context=True)
+    print(os.environ['TELEGRAM_TOKEN'])
+    updater = Updater(os.environ['TELEGRAM_TOKEN'], use_context=True)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
