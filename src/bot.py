@@ -37,6 +37,7 @@ api = Api()
 def start(update, context):
     reply_keyboard = [['Upload Photo', 'Exit']]
 
+
     update.message.reply_text(
         'Hi! I\'ll help you to create a hilarious video. '
         'You just need to follow my commands and you\'ll get a video at the end ' 
@@ -50,7 +51,7 @@ def start(update, context):
 
 def choice(update, context):
     user = update.message.from_user
-    logger.info("Choice of %s: %s", user.first_name, update.message.text)
+    logger.info(f"chat_id:{update.message.chat.id} │ Choice of {user.first_name}: {update.message.text}")
     update.message.reply_text('I see! Please send me a photo of yourself, '
                               'so I know what you look like, or send /skip if you don\'t want to.',
                               reply_markup=ReplyKeyboardRemove())
@@ -59,7 +60,7 @@ def choice(update, context):
 
 def photo(update, context):
     user = update.message.from_user
-    logger.info(f"Sent photo info to {user.first_name}")
+    logger.info(f"chat_id:{update.message.chat.id} │ Sent photo info to {user.first_name}")
     context.bot.sendPhoto(chat_id=update.message.chat.id, photo=open('example_photo.jpg', 'rb'),
                           caption="That's an example of a good photo to process.\n\n"
                                   "Now you should send me a photo to work with.")
@@ -71,9 +72,10 @@ def photo_upload(update, context):
     chat_id = update.message.chat.id
     photo_file = update.message.photo[-1].get_file()
     api.set_photo(photo_file.download_as_bytearray())
-    # photo_file.download(f'{chat_id}_photo.jpg')
+
     # api.set_data("/set", json=json.dumps({'img': f'{bytearr}'}))
-    logger.info("Got photo from %s: %s", user.first_name, f'{chat_id}_photo.jpg')
+
+    logger.info(f"chat_id:{chat_id} │ Got photo from {user.first_name} {chat_id}_photo.jpg")
     reply_keyboard = [['Upload Video', 'Exit']]
     update.message.reply_text('Gorgeous! '
                               'Now send me a video of you talking or pretending that you\'re the person on the picture.'
@@ -86,7 +88,7 @@ def photo_upload(update, context):
 
 def video(update, context):
     user = update.message.from_user
-    logger.info(f"Sent video info to {user.first_name}")
+    logger.info(f"chat_id:{update.message.chat.id} │ Sent video info to {user.first_name}")
     update.message.reply_text('I hope you\'ve prepared a video based on my previous message because you\'ll need it now'
                               '.\n\n Now you should send me a video to work with')
     return VIDEO_UPLOAD
@@ -99,9 +101,13 @@ def video_upload(update, context):
     video_file.download(f'{chat_id}_video.mp4')
     logger.info("Video upload successful %s", user.first_name)
     # api.video = video_file.download_as_bytearray()
+    # api.set_video(video_file.download_as_bytearray())
+    logger.info(f"chat_id:{chat_id} │ Got video from {user.first_name} {chat_id}_video.jpg")
+    # api.set_data('/set')
     api.set_video(video_file.download_as_bytearray())
 
     logger.info("Video of %s: %s", user.first_name, f'{chat_id}_video.mp4')
+    update.message.reply_text('Perfect! Now, wait, we are processing your request. Please wait, processing can last longer than 30 seconds')
     res = api.set_data('/inference')
 
     bot = update.message.bot
@@ -115,29 +121,34 @@ def video_upload(update, context):
     bot.send_video(chat_id, video=open(f'{chat_id}_final.mp4', 'rb'))
 
     logger.info("Got video from %s: %s", user.first_name, f'{chat_id}_video.mp4')
-    
-    update.message.reply_text('Perfect! Now, wait, we are processing your request.')
 
     update.message.reply_text('Hope you enjoyed the result.\n\nTo start over message /start.',
+
+    
+    #
+    #   Send result
+    #
+    logger.info(f"chat_id:{chat_id} │ Send final result {user.first_name}")
+    update.message.reply_text('Hope you enjoyed the result.\n\nTo start over message me with /start.',
                               reply_markup=ReplyKeyboardRemove())
+    logger.info(f"chat_id:{update.message.chat.id} │ User {user.first.name} ended the conversation")
     return ConversationHandler.END
 
 
 def skip_photo(update, context):
     user = update.message.from_user
-    logger.info("User %s did not send a photo.", user.first_name)
+    logger.info(f"chat_id:{update.message.chat.ud} │ User %s did not send a photo.", user.first_name)
     update.message.reply_text('I bet you look great! Now, send me your location please, '
                               'or send /skip.')
-
     return LOCATION
 
 
 def cancel(update, context):
     user = update.message.from_user
-    logger.info("User %s canceled the conversation.", user.first_name)
-    update.message.reply_text('Bye! I hope we can talk again some day.',
+    logger.info(f"chat_id:{update.message.chat.id} │ User {user.first.name} ended the conversation")
+    update.message.reply_text('Bye! I hope we can talk again some day.\n\n'
+                              'Message me with /start if you changed your mind',
                               reply_markup=ReplyKeyboardRemove())
-
     return ConversationHandler.END
 
 
@@ -148,9 +159,6 @@ def error(update, context):
 
 def main():
     logger.info("Start listenings...")
-    # Create the Updater and pass it your bot's token.
-    # Make sure to set use_context=True to use the new context based callbacks
-    # Post version 12 this will no longer be necessary
     print(os.environ['TELEGRAM_TOKEN'])
     updater = Updater(os.environ['TELEGRAM_TOKEN'], use_context=True)
 
